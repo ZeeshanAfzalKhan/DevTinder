@@ -3,12 +3,10 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-const connectionUrl = process.env.MONGO_URI;
-
 const connectDB = async () => {
   try {
-    await mongoose.connect(connectionUrl, {
-      dbName: "DevTinder"
+    await mongoose.connect(`${process.env.MONGO_URI}/${process.env.DB_NAME}`, {
+      dbName: process.env.DB_NAME,
     });
     console.log("Connected to MongoDB");
   } catch (error) {
