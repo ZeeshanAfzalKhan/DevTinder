@@ -1,5 +1,6 @@
 import mongoose from "mongoose";
 import User from "../models/user.model.js";
+import Connection from "../models/connection.model.js";
 
 const signUpUser = async (req, res) => {
   try {
@@ -194,6 +195,57 @@ const deleteUserAccount = async (req, res) => {
   }
 };
 
+const getFeed = async (req, res) => {
+  try {
+    const currentUserId = req.user._id;
+    const page = parseInt(req.query.page) || 1;
+    const limit = parseInt(req.query.limit) || 10;
+    const skip = (page - 1) * limit;
+
+    // Get all connections involving the current user
+    const connections = await Connection.find({
+      $or: [
+        { SenderId: currentUserId },
+        { ReceiverId: currentUserId },
+      ],
+    });
+
+    // Collect all users that should be hidden (already connected)
+    const hideUsers = connections.flatMap(conn => [
+      conn.SenderId.toString(),
+      conn.ReceiverId.toString(),
+    ]);
+
+    // Also hide the current user
+    hideUsers.push(currentUserId.toString());
+
+    // Fetch users not in hideUsers
+    const users = await User.find({ _id: { $nin: hideUsers } })
+      .select("-password")
+      .skip(skip)
+      .limit(limit);
+
+    // Count total remaining users for pagination
+    const totalUsers = await User.countDocuments({ _id: { $nin: hideUsers } });
+    const totalPages = Math.ceil(totalUsers / limit);
+
+    res.status(200).json({
+      page,
+      totalPages,
+      totalUsers,
+      users,
+      message: "User feed fetched successfully",
+    });
+
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "Server error",
+      error: error.message,
+    });
+  }
+};
+
 export {
   signUpUser,
   loginUser,
@@ -202,4 +254,5 @@ export {
   updateUserPassword,
   updateUserProfile,
   deleteUserAccount,
+  getFeed
 };

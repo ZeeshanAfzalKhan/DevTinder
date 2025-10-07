@@ -19,4 +19,6 @@ router.patch("/update-profile", authenticate, updateUserProfile);
 
 router.delete("/delete-account", authenticate, deleteUserAccount);
 
+
+
 export default router;

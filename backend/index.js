@@ -14,9 +14,11 @@ app.use(cookieParser());
 
 // Route imports
 import userRoutes from "./src/routes/user.routes.js";
+import connectionRoutes from "./src/routes/connection.routes.js";
 
 // Use Routes
 app.use("/api/v1", userRoutes);
+app.use("/api/v1/connections", connectionRoutes);
 
 
 // middlewares for error handling
